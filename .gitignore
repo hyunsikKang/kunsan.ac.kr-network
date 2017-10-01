@@ -1,4 +1,5 @@
 target/
+out/
 
 ### STS ###
 .apt_generated
@@ -17,7 +18,6 @@ target/
 ### NetBeans ###
 nbproject/private/
 build/
-out/
 nbbuild/
 dist/
 nbdist/
