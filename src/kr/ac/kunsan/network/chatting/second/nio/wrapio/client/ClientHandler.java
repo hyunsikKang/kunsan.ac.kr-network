@@ -36,10 +36,10 @@ public class ClientHandler extends Thread {
 			 * Object를 Serialization/Deserialization 하기 위해 ObjectInput/OutputStream 을 사용한다.
 			 */
 			ChattingResponse response;
+			// 서버에게 request를 보내기 위해 OutputStream을 소켓 채널로부터 연다
+			outputStream = new ObjectOutputStream(SocketChannelStream.out(socket));
 			// 서버에게 response를 받기 위해 InputStream을 소켓 채널로로부터 연다
 			inputStream = new ObjectInputStream(SocketChannelStream.in(socket));
-			// 서버에게 request를 보내기 위해 InputStream을 소켓 채널로부터 연다
-			outputStream = new ObjectOutputStream(SocketChannelStream.out(socket));
 			do {
 				/**
 				 * 입장 메시지를 생성한다
