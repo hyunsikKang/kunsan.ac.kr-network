@@ -27,6 +27,9 @@ public class ChattingClient {
 
 		if (socket.isOpen() && selector.isOpen()) {
 			socket.configureBlocking(false);
+			// 오픈된 소켓은 접속에 대해서만 셀렉트 키를 등록한다
+			// 이후에는 키 입력과 서버로부터 수신을 별도로 받아야 하므로
+			// 셀렉터의 사용 없이 읽기와 보내기를 별도의 스레드에서 처리한다
 			socket.register(selector, SelectionKey.OP_CONNECT);
 
 			// 접속을 수행하지만 곧바로 접속되지 않고 non blocking 형태로 곧바로 리턴된다
@@ -54,6 +57,8 @@ public class ChattingClient {
 
 					/**
 					 * 클라이언트 채팅 프로그램을 위한 핸들러를 신규 스레드로 수행한다.
+					 * non blocking 채널이라고 꼭 single thread로 동작할 필요는 없다
+					 * 키 입력과 수신을 별도로 진행해야 하니 내부에서 그대로 스레드를 사용한다
 					 */
 					new ClientHandler(connectedChannel).start();
 
