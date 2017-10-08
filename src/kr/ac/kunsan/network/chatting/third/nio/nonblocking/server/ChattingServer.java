@@ -170,7 +170,7 @@ public class ChattingServer {
 
 	/**
 	 * 닉네임으로 클라이언트를 등록한다.
-	 * non blocking 이므로 동시성을 생각할 필요 없이 synchronized 키워드 없이 체크한다
+	 * non blocking 이므로 동시성을 생각할 필요 없이 synchronized 키워드 없이 클라이언트를 등록한다
 	 * @param nickName
 	 * @param socketchannel
 	 * @return
