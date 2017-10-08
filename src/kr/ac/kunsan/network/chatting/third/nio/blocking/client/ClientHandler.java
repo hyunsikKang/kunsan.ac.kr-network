@@ -149,7 +149,7 @@ public class ClientHandler extends Thread {
 				} catch (IOException e) {
 					e.printStackTrace();
 				} finally {
-					// 예외 발생시 키보드 입력과 열었던 InputStream, OutputStream, 그리고 소켓을 닫는다
+					// 예외 발생시 키보드 입력과 열었던 소켓을 닫는다
 					// 자원을 정리하지 않을 경우 메모리의 누수가 발생할 수 있다.
 					closeAllOfCloseableResources();
 				}
