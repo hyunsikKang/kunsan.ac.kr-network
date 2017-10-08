@@ -1,4 +1,4 @@
-package kr.ac.kunsan.network.chatting.third.nio.blocking.client;
+package kr.ac.kunsan.network.chatting.third.nio.nonblocking.client;
 
 import static kr.ac.kunsan.network.chatting.third.nio.JsonRequestResponseConverter.*;
 
@@ -35,7 +35,8 @@ public class ClientHandler extends Thread {
 			 * Object를 Serialization/Deserialization 하기 위해 ObjectInput/OutputStream 을 사용한다.
 			 */
 
-			ChattingResponse response;
+			ChattingResponse response = null;
+
 			do {
 				/**
 				 * 입장 메시지를 생성한다
@@ -47,12 +48,19 @@ public class ClientHandler extends Thread {
 
 				writeRequest(request, socket);
 
-				/**
-				 * 서버에게서 응답을 받는다.
-				 * 성공일 경우 중복 없는 대화명이 등록 되고
-				 * 키보드 입력을 받게 된다
-				 */
-				response = getChattingResponse(socket, buffer);
+				while(response == null) {
+
+					/**
+					 * 서버에게서 응답을 받는다.
+					 * 성공일 경우 중복 없는 대화명이 등록 되고
+					 * 키보드 입력을 받게 된다
+					 * non blocking 클라이언트 이므로 null이 리턴될 수 있다. 응답이 올때까지 loop를 돈다
+					 */
+					response = getChattingResponse(socket, buffer);
+					if (response == null) {
+						continue;
+					}
+				}
 
 				if (response.isSuccess()) {
 					nickName = request.getKey();
@@ -92,6 +100,9 @@ public class ClientHandler extends Thread {
 						 * 키보드 입력을 받게 된다
 						 */
 						ChattingResponse response = getChattingResponse(socket, buffer);
+						if (response == null) {
+							continue;
+						}
 						System.out.println(response.getNickName() + ": " + response.getMessage());
 					} catch (Exception e) {
 						// 예외 발생시 키보드 입력과 열었던 InputStream, OutputStream, 그리고 소켓을 닫는다

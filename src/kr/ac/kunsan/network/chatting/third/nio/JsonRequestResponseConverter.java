@@ -34,6 +34,10 @@ public class JsonRequestResponseConverter {
 	}
 
 	private static ChattingRequest fromRequestString(String request) {
+		if (request == null || request.isEmpty()) {
+			return null;
+		}
+
 		JsonObject value = Json.parse(request).asObject();
 		ChattingRequest chattingRequest = new ChattingRequest();
 		chattingRequest.setKey(value.getString("key", null));
@@ -44,6 +48,9 @@ public class JsonRequestResponseConverter {
 	}
 
 	private static ChattingResponse fromResponseString(String request) {
+		if (request == null || request.isEmpty()) {
+			return null;
+		}
 		JsonObject value = Json.parse(request).asObject();
 		ChattingResponse chattingRequest = new ChattingResponse();
 		chattingRequest.setNickName(value.getString("nickName", null));
