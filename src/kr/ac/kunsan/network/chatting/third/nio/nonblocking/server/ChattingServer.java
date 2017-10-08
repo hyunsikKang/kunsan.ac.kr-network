@@ -23,7 +23,7 @@ import kr.ac.kunsan.network.chatting.NetworkUtils;
 
 public class ChattingServer {
 	/**
-	 * 클라이언트를 닉네임과 SocketChannel을 Key/Value로 가지는 맵을 생성한다. non blocking single thread 모델이므로 ConcurrentHashMap을 사용할 필요가 없다.
+	 * 클라이언트를 SocketChannel과 nickname을 Key/Value로 가지는 맵을 생성한다. non blocking single thread 모델이므로 ConcurrentHashMap을 사용할 필요가 없다.
 	 */
 	private Map<SocketChannel, String> clientMap = new HashMap<>();
 	private List<ChattingResponse> writeResponseList = new ArrayList<>();
@@ -121,6 +121,7 @@ public class ChattingServer {
 					response.setNickName("");
 					response.setMessage(nickName + "은 이미 등록되어 있는 닉네임 입니다. 닉네임을 다시 입력해 주세요");
 					response.setSuccess(false);
+					// 이미 등록된 닉네임일 경우 클라이언트로 등록하지 않고 메세지를 바로 보낸다
 					JsonRequestResponseConverter.writeResponse(response, channel);
 					return;
 				}
@@ -143,6 +144,7 @@ public class ChattingServer {
 			} else {
 				return;
 			}
+			// write를 할 수 있도록 list에 add 한다
 			writeResponseList.add(response);
 
 			// read 후에 writer를 위한 관심 오퍼레이션을 변경한다
@@ -154,21 +156,21 @@ public class ChattingServer {
 
 	private void acceptHandle(SelectionKey key, Selector selector) throws IOException, ClassNotFoundException {
 		ServerSocketChannel channel = (ServerSocketChannel)key.channel();
-		SocketChannel acceptSocket = channel.accept();
-		acceptSocket.configureBlocking(false);
+		SocketChannel acceptedClientSocketChannel = channel.accept();
+		// non blocking 설정을 한다
+		acceptedClientSocketChannel.configureBlocking(false);
 
-		InetSocketAddress remoteSocketAddress = (InetSocketAddress)acceptSocket.getRemoteAddress();
+		InetSocketAddress remoteSocketAddress = (InetSocketAddress)acceptedClientSocketChannel.getRemoteAddress();
 		System.out.println("클라이언트가 접속 하였습니다. IP : " + remoteSocketAddress.getAddress().getHostAddress() + ", PORT : " + remoteSocketAddress.getPort());
 
 		// 클라이언트 소켓을 셀렉터에 read로 등록한다
 		// 클라이언트로 부터는 리드 동작만 등록한다
-		acceptSocket.register(selector, SelectionKey.OP_READ);
+		acceptedClientSocketChannel.register(selector, SelectionKey.OP_READ);
 	}
 
 	/**
 	 * 닉네임으로 클라이언트를 등록한다.
-	 * 동시에 등록되는 것을 방지하기 위해 synchronized 를 사용한다
-	 * clientMap 자체는 ConcurrentHashMap 이지만 containsKey와 put이 하나의 동작이 아니기 때문에 synchronized 를 걸어준다
+	 * non blocking 이므로 동시성을 생각할 필요 없이 synchronized 키워드 없이 체크한다
 	 * @param nickName
 	 * @param socketchannel
 	 * @return
@@ -203,9 +205,8 @@ public class ChattingServer {
 	 * @param response
 	 */
 	public void sendClients(ChattingResponse response) {
-		for (Map.Entry<SocketChannel, String> entry : clientMap.entrySet()) {
+		for (SocketChannel socketChannel: clientMap.keySet()) {
 			try {
-				SocketChannel socketChannel = entry.getKey();
 				JsonRequestResponseConverter.writeResponse(response, socketChannel);
 			} catch (IOException e) {
 				e.printStackTrace();
