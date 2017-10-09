@@ -1,4 +1,4 @@
-package kr.ac.kunsan.network.chatting.third.nio;
+package kr.ac.kunsan.network.chatting;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
@@ -8,9 +8,6 @@ import java.nio.charset.CharsetDecoder;
 
 import com.eclipsesource.json.Json;
 import com.eclipsesource.json.JsonObject;
-
-import kr.ac.kunsan.network.chatting.ChattingRequest;
-import kr.ac.kunsan.network.chatting.ChattingResponse;
 
 public class JsonRequestResponseConverter {
 

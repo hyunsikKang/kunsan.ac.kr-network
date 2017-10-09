@@ -1,6 +1,6 @@
 package kr.ac.kunsan.network.chatting.third.nio.blocking.client;
 
-import static kr.ac.kunsan.network.chatting.third.nio.JsonRequestResponseConverter.*;
+import static kr.ac.kunsan.network.chatting.JsonRequestResponseConverter.*;
 
 import java.io.BufferedReader;
 import java.io.IOException;
