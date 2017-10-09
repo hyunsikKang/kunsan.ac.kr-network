@@ -1,4 +1,4 @@
-package kr.ac.kunsan.network.chatting.second.nio.wrapio.client;
+package kr.ac.kunsan.network.chatting._2.nio.wrapio.client;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;

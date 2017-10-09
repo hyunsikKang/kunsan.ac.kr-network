@@ -1,4 +1,4 @@
-package kr.ac.kunsan.network.chatting.third.nio.blocking.client;
+package kr.ac.kunsan.network.chatting._3.nio.blocking.client;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;

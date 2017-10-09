@@ -1,4 +1,4 @@
-package kr.ac.kunsan.network.chatting.second.nio.wrapio.server;
+package kr.ac.kunsan.network.chatting._2.nio.wrapio.server;
 
 import java.io.IOException;
 import java.io.ObjectOutputStream;

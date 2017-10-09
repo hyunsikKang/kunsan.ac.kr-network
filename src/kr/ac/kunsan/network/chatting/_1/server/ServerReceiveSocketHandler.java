@@ -1,23 +1,22 @@
-package kr.ac.kunsan.network.chatting.second.nio.wrapio.server;
+package kr.ac.kunsan.network.chatting._1.server;
 
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
-import java.nio.channels.SocketChannel;
+import java.net.Socket;
 
 import kr.ac.kunsan.network.chatting.ChattingRequest;
 import kr.ac.kunsan.network.chatting.ChattingResponse;
 import kr.ac.kunsan.network.chatting.NetworkUtils;
-import kr.ac.kunsan.network.chatting.SocketChannelStream;
 
 public class ServerReceiveSocketHandler extends Thread {
 	ChattingServer server;
-	private SocketChannel socket;
+	private Socket socket;
 	private ObjectInputStream inputStream;
 	private ObjectOutputStream outputStream;
 	private String nickName = "";
 
-	ServerReceiveSocketHandler(SocketChannel socket, ChattingServer server) throws IOException {
+	ServerReceiveSocketHandler(Socket socket, ChattingServer server) throws IOException {
 		this.socket = socket;
 		this.server = server;
 	}
@@ -25,13 +24,12 @@ public class ServerReceiveSocketHandler extends Thread {
 	@Override
 	public void run() {
 		try {
-			// 클라이언트에게 request를 받기 위해 InputStream을 소켓 채널로로부터 연다
-			inputStream = new ObjectInputStream(SocketChannelStream.in(socket));
-			// 클라이언트에게 response를 보내기 위해 InputStream을 소켓 채널로부터 연다
-			outputStream = new ObjectOutputStream(SocketChannelStream.out(socket));
+			// 서버에서 클라이언트와 통신할 소켓의 input/output Stream을 열어준다
+			this.outputStream = new ObjectOutputStream(socket.getOutputStream());
+			this.inputStream = new ObjectInputStream(socket.getInputStream());
 
 			// 소켓이 종료 되기전까지 계속 요청을 읽어온다
-			while (socket.isConnected()) {
+			while (!socket.isClosed()) {
 				ChattingRequest chattingRequest = (ChattingRequest)inputStream.readObject();
 				ChattingResponse response = new ChattingResponse();
 				response.setMessageType(chattingRequest.getMessageType());

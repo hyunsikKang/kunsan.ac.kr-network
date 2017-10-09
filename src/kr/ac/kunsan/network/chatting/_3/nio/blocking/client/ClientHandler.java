@@ -1,20 +1,20 @@
-package kr.ac.kunsan.network.chatting.first.client;
+package kr.ac.kunsan.network.chatting._3.nio.blocking.client;
+
+import static kr.ac.kunsan.network.chatting.JsonRequestResponseConverter.*;
 
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
-import java.net.Socket;
+import java.nio.ByteBuffer;
+import java.nio.channels.SocketChannel;
 
 import kr.ac.kunsan.network.chatting.ChattingRequest;
 import kr.ac.kunsan.network.chatting.ChattingResponse;
 import kr.ac.kunsan.network.chatting.NetworkUtils;
 
 public class ClientHandler extends Thread {
-	private ObjectInputStream inputStream;
-	private ObjectOutputStream outputStream;
-	private Socket socket;
+	ByteBuffer buffer = ByteBuffer.allocate(1024 * 4);
+	private SocketChannel socket;
 	private BufferedReader keyboard = new BufferedReader(new InputStreamReader(System.in));
 	private String nickName;
 
@@ -26,19 +26,16 @@ public class ClientHandler extends Thread {
 	 * @param socket
 	 * @throws IOException
 	 */
-	public ClientHandler(Socket socket) throws IOException {
+	public ClientHandler(SocketChannel socket) throws IOException {
 		this.socket = socket;
 
 		try {
 			/**
 			 * 모든 Request/Response는 ChattingRequest/ChattingResponse를 전달/회신 받는다
-			 * Object를 Serialization/Deserialization 하기 위해 ObjectInput/OutputStream 을 사용한다.
+			 * Object를 Serialization/Deserialization 하기 위해 String으로 JSON 을 사용하여 serialize/deserialize를 한다.
 			 */
+
 			ChattingResponse response;
-			// 서버에게 response를 받기 위해 InputStream을 소켓으로부터 연다
-			inputStream = new ObjectInputStream(socket.getInputStream());
-			// 서버에게 request를 보내기 위해 InputStream을 소켓으로부터 연다
-			outputStream = new ObjectOutputStream(socket.getOutputStream());
 			do {
 				/**
 				 * 입장 메시지를 생성한다
@@ -48,17 +45,14 @@ public class ClientHandler extends Thread {
 				request.setMessageType(ChattingRequest.MessageType.JOIN);
 				request.setKey(keyboard.readLine());
 
-				/**
-				 * 입력된 대화명을 서버로 전송한다
-				 */
-				NetworkUtils.writeAndFlush(outputStream, request);
+				writeRequest(request, socket);
 
 				/**
 				 * 서버에게서 응답을 받는다.
 				 * 성공일 경우 중복 없는 대화명이 등록 되고
 				 * 키보드 입력을 받게 된다
 				 */
-				response = (ChattingResponse)inputStream.readObject();
+				response = getChattingResponse(socket, buffer);
 
 				if (response.isSuccess()) {
 					nickName = request.getKey();
@@ -90,10 +84,15 @@ public class ClientHandler extends Thread {
 	private void startReadFromServerThread() {
 		new Thread(new Runnable() {
 			@Override public void run() {
-				while (!socket.isClosed()) {
+				while (socket.isConnected()) {
 					try {
-						ChattingResponse resp = (ChattingResponse)inputStream.readObject();
-						System.out.println(resp.getNickName() + ": " + resp.getMessage());
+						/**
+						 * 서버에게서 응답을 받는다.
+						 * 성공일 경우 중복 없는 대화명이 등록 되고
+						 * 키보드 입력을 받게 된다
+						 */
+						ChattingResponse response = getChattingResponse(socket, buffer);
+						System.out.println(response.getNickName() + ": " + response.getMessage());
 					} catch (Exception e) {
 						// 예외 발생시 키보드 입력과 열었던 InputStream, OutputStream, 그리고 소켓을 닫는다
 						// 자원을 정리하지 않을 경우 메모리의 누수가 발생할 수 있다.
@@ -112,7 +111,7 @@ public class ClientHandler extends Thread {
 		new Thread(new Runnable() {
 			@Override public void run() {
 				try {
-					String input = "";
+					String input;
 					while (socket.isConnected()) {
 						/**
 						 * 키보드 입력을 사용자에게서 !q를 입력하기 전까지 계속 입력 받는다
@@ -126,7 +125,7 @@ public class ClientHandler extends Thread {
 								ChattingRequest request = new ChattingRequest();
 								request.setMessageType(ChattingRequest.MessageType.LEAVE);
 								request.setKey(nickName);
-								NetworkUtils.writeAndFlush(outputStream, request);
+								writeRequest(request, socket);
 							}
 							break;
 						}
@@ -140,15 +139,17 @@ public class ClientHandler extends Thread {
 							request.setMessage(input);
 							request.setKey(nickName);
 
-							NetworkUtils.writeAndFlush(outputStream, request);
+							writeRequest(request, socket);
 						} catch (IOException e) {
+							e.printStackTrace();
+							closeAllOfCloseableResources();
 							break;
 						}
 					}
 				} catch (IOException e) {
 					e.printStackTrace();
 				} finally {
-					// 예외 발생시 키보드 입력과 열었던 InputStream, OutputStream, 그리고 소켓을 닫는다
+					// 예외 발생시 키보드 입력과 열었던 소켓을 닫는다
 					// 자원을 정리하지 않을 경우 메모리의 누수가 발생할 수 있다.
 					closeAllOfCloseableResources();
 				}
@@ -161,8 +162,6 @@ public class ClientHandler extends Thread {
 	 */
 	private void closeAllOfCloseableResources() {
 		NetworkUtils.closeQuietly(keyboard);
-		NetworkUtils.closeQuietly(outputStream);
-		NetworkUtils.closeQuietly(inputStream);
 		NetworkUtils.closeQuietly(socket);
 	}
 }

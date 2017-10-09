@@ -1,21 +1,20 @@
-package kr.ac.kunsan.network.chatting.second.nio.wrapio.client;
+package kr.ac.kunsan.network.chatting._1.client;
 
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
-import java.nio.channels.SocketChannel;
+import java.net.Socket;
 
 import kr.ac.kunsan.network.chatting.ChattingRequest;
 import kr.ac.kunsan.network.chatting.ChattingResponse;
 import kr.ac.kunsan.network.chatting.NetworkUtils;
-import kr.ac.kunsan.network.chatting.SocketChannelStream;
 
 public class ClientHandler extends Thread {
 	private ObjectInputStream inputStream;
 	private ObjectOutputStream outputStream;
-	private SocketChannel socket;
+	private Socket socket;
 	private BufferedReader keyboard = new BufferedReader(new InputStreamReader(System.in));
 	private String nickName;
 
@@ -27,7 +26,7 @@ public class ClientHandler extends Thread {
 	 * @param socket
 	 * @throws IOException
 	 */
-	public ClientHandler(SocketChannel socket) throws IOException {
+	public ClientHandler(Socket socket) throws IOException {
 		this.socket = socket;
 
 		try {
@@ -36,10 +35,10 @@ public class ClientHandler extends Thread {
 			 * Object를 Serialization/Deserialization 하기 위해 ObjectInput/OutputStream 을 사용한다.
 			 */
 			ChattingResponse response;
-			// 서버에게 request를 보내기 위해 OutputStream을 소켓 채널로부터 연다
-			outputStream = new ObjectOutputStream(SocketChannelStream.out(socket));
-			// 서버에게 response를 받기 위해 InputStream을 소켓 채널로로부터 연다
-			inputStream = new ObjectInputStream(SocketChannelStream.in(socket));
+			// 서버에게 response를 받기 위해 InputStream을 소켓으로부터 연다
+			inputStream = new ObjectInputStream(socket.getInputStream());
+			// 서버에게 request를 보내기 위해 InputStream을 소켓으로부터 연다
+			outputStream = new ObjectOutputStream(socket.getOutputStream());
 			do {
 				/**
 				 * 입장 메시지를 생성한다
@@ -91,7 +90,7 @@ public class ClientHandler extends Thread {
 	private void startReadFromServerThread() {
 		new Thread(new Runnable() {
 			@Override public void run() {
-				while (socket.isConnected()) {
+				while (!socket.isClosed()) {
 					try {
 						ChattingResponse resp = (ChattingResponse)inputStream.readObject();
 						System.out.println(resp.getNickName() + ": " + resp.getMessage());

@@ -1,4 +1,4 @@
-package kr.ac.kunsan.network.chatting.third.nio.nonblocking.client;
+package kr.ac.kunsan.network.chatting._3.nio.nonblocking.client;
 
 import static kr.ac.kunsan.network.chatting.JsonRequestResponseConverter.*;
 
