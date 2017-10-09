@@ -25,7 +25,7 @@ public class NetworkUtils {
 
 		long count = 0;
 		int n;
-		while((n = inputStream.read(buffer)) != -1 && n > 0)  {
+		while((n = inputStream.read(buffer)) != -1)  {
 			count += n;
 			outputStream.write(buffer, 0, n);
 		}
