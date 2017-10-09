@@ -15,6 +15,7 @@ import java.util.Set;
 import kr.ac.kunsan.network.chatting.ChattingRequest;
 import kr.ac.kunsan.network.chatting.ChattingResponse;
 import kr.ac.kunsan.network.chatting.NetworkUtils;
+import kr.ac.kunsan.network.chatting._3.nio.SocketRequestResponseUtils;
 
 public class ClientHandler extends Thread {
 	ByteBuffer buffer = ByteBuffer.allocate(1024 * 4);
@@ -58,7 +59,7 @@ public class ClientHandler extends Thread {
 				request.setMessageType(ChattingRequest.MessageType.JOIN);
 				request.setKey(keyboard.readLine());
 
-				writeRequest(request, socket);
+				SocketRequestResponseUtils.writeRequest(request, socket);
 
 				// 결과를 돌려 받을때까지 select로 대기한다
 				while (response == null && selector.select() > 0) {
@@ -77,7 +78,7 @@ public class ClientHandler extends Thread {
 						 * 성공일 경우 중복 없는 대화명이 등록 되고
 						 * 키보드 입력을 받게 된다
 						 */
-						response = getChattingResponse(socket, buffer);
+						response = SocketRequestResponseUtils.getChattingResponse(socket, buffer);
 					}
 				}
 
@@ -129,7 +130,7 @@ public class ClientHandler extends Thread {
 							if (!key.isReadable()) {
 								continue;
 							}
-							ChattingResponse response = getChattingResponse(socket, buffer);
+							ChattingResponse response = SocketRequestResponseUtils.getChattingResponse(socket, buffer);
 
 							System.out.println(response.getNickName() + ": " + response.getMessage());
 						}
@@ -165,7 +166,7 @@ public class ClientHandler extends Thread {
 								ChattingRequest request = new ChattingRequest();
 								request.setMessageType(ChattingRequest.MessageType.LEAVE);
 								request.setKey(nickName);
-								writeRequest(request, socket);
+								SocketRequestResponseUtils.writeRequest(request, socket);
 							}
 							break;
 						}
@@ -179,7 +180,7 @@ public class ClientHandler extends Thread {
 							request.setMessage(input);
 							request.setKey(nickName);
 
-							writeRequest(request, socket);
+							SocketRequestResponseUtils.writeRequest(request, socket);
 						} catch (IOException e) {
 							e.printStackTrace();
 							closeAllOfCloseableResources();
