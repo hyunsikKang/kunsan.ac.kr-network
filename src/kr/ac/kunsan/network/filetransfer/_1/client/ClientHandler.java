@@ -26,7 +26,8 @@ public class ClientHandler extends Thread {
 		try {
 			InputStream fileStream = new BufferedInputStream(new FileInputStream(keyboard.readLine()));
 			OutputStream outputStream = this.outputStream;
-			copyOutputStream(fileStream, outputStream);
+
+			NetworkUtils.copyOutputStream(fileStream, outputStream);
 
 			System.out.println("파일 전송이 완료 되었습니다.");
 		} catch (Exception e) {
@@ -35,19 +36,6 @@ public class ClientHandler extends Thread {
 			closeAllOfCloseableResources();
 		}
 
-	}
-
-	public long copyOutputStream(InputStream fileStream, OutputStream outputStream) throws IOException {
-		byte buffer[] = new byte[2048];
-
-		long count = 0;
-		int n;
-		while((n = fileStream.read(buffer)) != -1)  {
-			count += n;
-			outputStream.write(buffer, 0, n);
-		}
-
-		return count;
 	}
 
 	/**
