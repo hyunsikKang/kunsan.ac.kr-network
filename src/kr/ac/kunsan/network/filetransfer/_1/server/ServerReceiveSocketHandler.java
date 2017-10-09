@@ -5,23 +5,16 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
 import java.io.OutputStream;
 import java.net.Socket;
-import java.nio.file.Files;
-import java.nio.file.Paths;
 import java.util.UUID;
 
-import kr.ac.kunsan.network.chatting.ChattingRequest;
-import kr.ac.kunsan.network.chatting.ChattingResponse;
 import kr.ac.kunsan.network.NetworkUtils;
 
 public class ServerReceiveSocketHandler extends Thread {
 	FileTransferServer server;
 	private Socket socket;
 	private String writePath;
-	private OutputStream outputStream;
 
 	ServerReceiveSocketHandler(Socket socket, FileTransferServer server, String writeDirectory) throws IOException {
 		this.socket = socket;
@@ -41,7 +34,7 @@ public class ServerReceiveSocketHandler extends Thread {
 
 			System.out.println(writePath + " 경로에 저장 완료 되었습니다.");
 
-		} catch(Exception e) {
+		} catch (Exception e) {
 			e.printStackTrace();
 		} finally {
 			NetworkUtils.closeQuietly(socket);
