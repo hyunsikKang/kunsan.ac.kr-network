@@ -48,6 +48,7 @@ public class ChattingClient {
 					if (!key.isConnectable()) {
 						continue;
 					}
+
 					System.out.println("서버에 접속 되었습니다.");
 					System.out.print("대화명을 입력하세요: ");
 					// 접속 대기중인 상태가 있다면 완료 처리후 접속한다
@@ -61,7 +62,6 @@ public class ChattingClient {
 					 * 키 입력과 수신을 별도로 진행해야 하니 내부에서 그대로 스레드를 사용한다
 					 */
 					new ClientHandler(connectedChannel).start();
-
 				}
 			}
 		} else {

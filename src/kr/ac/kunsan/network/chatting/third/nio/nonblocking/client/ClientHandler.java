@@ -6,7 +6,11 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.nio.ByteBuffer;
+import java.nio.channels.SelectionKey;
+import java.nio.channels.Selector;
 import java.nio.channels.SocketChannel;
+import java.util.Iterator;
+import java.util.Set;
 
 import kr.ac.kunsan.network.chatting.ChattingRequest;
 import kr.ac.kunsan.network.chatting.ChattingResponse;
@@ -17,6 +21,7 @@ public class ClientHandler extends Thread {
 	private SocketChannel socket;
 	private BufferedReader keyboard = new BufferedReader(new InputStreamReader(System.in));
 	private String nickName;
+	private Selector selector;
 
 	/**
 	 * 클라이언트의 행위를 제어하는 핸들러 생성자로
@@ -28,6 +33,13 @@ public class ClientHandler extends Thread {
 	 */
 	public ClientHandler(SocketChannel socket) throws IOException {
 		this.socket = socket;
+		this.selector = Selector.open();
+		if (!selector.isOpen()) {
+			throw new IllegalStateException("selector is not opened");
+		}
+
+		// 서버로부터 데이터를 읽어올 수 있게 셀렉션 키를 등록한다
+		socket.register(selector, SelectionKey.OP_READ);
 
 		try {
 			/**
@@ -48,17 +60,24 @@ public class ClientHandler extends Thread {
 
 				writeRequest(request, socket);
 
-				while(response == null) {
+				// 결과를 돌려 받을때까지 select로 대기한다
+				while (response == null && selector.select() > 0) {
+					Set<SelectionKey> keys = selector.selectedKeys();
 
-					/**
-					 * 서버에게서 응답을 받는다.
-					 * 성공일 경우 중복 없는 대화명이 등록 되고
-					 * 키보드 입력을 받게 된다
-					 * non blocking 클라이언트 이므로 null이 리턴될 수 있다. 응답이 올때까지 loop를 돈다
-					 */
-					response = getChattingResponse(socket, buffer);
-					if (response == null) {
-						continue;
+					Iterator<SelectionKey> iterator = keys.iterator();
+
+					while (iterator.hasNext()) {
+						SelectionKey key = iterator.next();
+						iterator.remove();
+						if (!key.isReadable()) {
+							continue;
+						}
+						/**
+						 * 서버에게서 응답을 받는다.
+						 * 성공일 경우 중복 없는 대화명이 등록 되고
+						 * 키보드 입력을 받게 된다
+						 */
+						response = getChattingResponse(socket, buffer);
 					}
 				}
 
@@ -70,6 +89,7 @@ public class ClientHandler extends Thread {
 
 			} while (!response.isSuccess());
 			System.out.println(nickName + " 대화명이 채팅 서버에 등록 되었습니다.");
+
 
 		} catch (Exception e) {
 			// 예외 발생시 키보드 입력과 열었던 InputStream, OutputStream, 그리고 소켓을 닫는다
@@ -92,24 +112,33 @@ public class ClientHandler extends Thread {
 	private void startReadFromServerThread() {
 		new Thread(new Runnable() {
 			@Override public void run() {
-				while (socket.isConnected()) {
-					try {
-						/**
-						 * 서버에게서 응답을 받는다.
-						 * 성공일 경우 중복 없는 대화명이 등록 되고
-						 * 키보드 입력을 받게 된다
-						 */
-						ChattingResponse response = getChattingResponse(socket, buffer);
-						if (response == null) {
-							continue;
+				try {
+					/**
+					 * 서버에게서 응답을 받는다.
+					 * 성공일 경우 중복 없는 대화명이 등록 되고
+					 * 키보드 입력을 받게 된다
+					 */
+					while (socket.isConnected() && selector.select() > 0) {
+						Set<SelectionKey> keys = selector.selectedKeys();
+
+						Iterator<SelectionKey> iterator = keys.iterator();
+
+						while (iterator.hasNext()) {
+							SelectionKey key = iterator.next();
+							iterator.remove();
+							if (!key.isReadable()) {
+								continue;
+							}
+							ChattingResponse response = getChattingResponse(socket, buffer);
+
+							System.out.println(response.getNickName() + ": " + response.getMessage());
 						}
-						System.out.println(response.getNickName() + ": " + response.getMessage());
-					} catch (Exception e) {
-						// 예외 발생시 키보드 입력과 열었던 InputStream, OutputStream, 그리고 소켓을 닫는다
-						// 자원을 정리하지 않을 경우 메모리의 누수가 발생할 수 있다.
-						closeAllOfCloseableResources();
-						break;
 					}
+
+				} catch (Exception e) {
+					// 예외 발생시 키보드 입력과 열었던 소켓을 닫는다
+					// 자원을 정리하지 않을 경우 메모리의 누수가 발생할 수 있다.
+					closeAllOfCloseableResources();
 				}
 			}
 		}).start();
@@ -160,7 +189,7 @@ public class ClientHandler extends Thread {
 				} catch (IOException e) {
 					e.printStackTrace();
 				} finally {
-					// 예외 발생시 키보드 입력과 열었던 소켓을 닫는다
+					// 예외 발생시 키보드 입력과 열었던 소켓과 셀렉터를 닫는다
 					// 자원을 정리하지 않을 경우 메모리의 누수가 발생할 수 있다.
 					closeAllOfCloseableResources();
 				}
@@ -174,5 +203,6 @@ public class ClientHandler extends Thread {
 	private void closeAllOfCloseableResources() {
 		NetworkUtils.closeQuietly(keyboard);
 		NetworkUtils.closeQuietly(socket);
+		NetworkUtils.closeQuietly(selector);
 	}
 }
