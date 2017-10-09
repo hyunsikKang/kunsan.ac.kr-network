@@ -1,4 +1,4 @@
-package kr.ac.kunsan.network.chatting;
+package kr.ac.kunsan.network;
 
 import java.io.IOException;
 import java.io.InputStream;

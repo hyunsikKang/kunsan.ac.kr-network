@@ -9,7 +9,7 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 import kr.ac.kunsan.network.chatting.ChattingResponse;
-import kr.ac.kunsan.network.chatting.NetworkUtils;
+import kr.ac.kunsan.network.NetworkUtils;
 
 public class ChattingServer {
 	private ServerSocket serverSocket;

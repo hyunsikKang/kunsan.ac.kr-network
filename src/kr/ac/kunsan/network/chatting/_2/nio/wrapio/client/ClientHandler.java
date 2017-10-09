@@ -9,8 +9,8 @@ import java.nio.channels.SocketChannel;
 
 import kr.ac.kunsan.network.chatting.ChattingRequest;
 import kr.ac.kunsan.network.chatting.ChattingResponse;
-import kr.ac.kunsan.network.chatting.NetworkUtils;
-import kr.ac.kunsan.network.chatting.SocketChannelStream;
+import kr.ac.kunsan.network.NetworkUtils;
+import kr.ac.kunsan.network.SocketChannelStream;
 
 public class ClientHandler extends Thread {
 	private ObjectInputStream inputStream;

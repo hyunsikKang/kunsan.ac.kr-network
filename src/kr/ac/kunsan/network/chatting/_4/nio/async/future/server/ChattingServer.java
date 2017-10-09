@@ -12,7 +12,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 import kr.ac.kunsan.network.chatting.ChattingResponse;
-import kr.ac.kunsan.network.chatting.NetworkUtils;
+import kr.ac.kunsan.network.NetworkUtils;
 import kr.ac.kunsan.network.chatting._4.nio.async.future.FutureAsynchronousSocketRequestResponseUtils;
 
 public class ChattingServer {

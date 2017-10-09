@@ -10,7 +10,7 @@ import java.nio.channels.AsynchronousSocketChannel;
 
 import kr.ac.kunsan.network.chatting.ChattingRequest;
 import kr.ac.kunsan.network.chatting.ChattingResponse;
-import kr.ac.kunsan.network.chatting.NetworkUtils;
+import kr.ac.kunsan.network.NetworkUtils;
 
 public class ClientHandler extends Thread {
 	ByteBuffer buffer = ByteBuffer.allocate(1024 * 4);

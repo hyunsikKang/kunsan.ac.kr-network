@@ -1,7 +1,5 @@
 package kr.ac.kunsan.network.chatting._3.nio.nonblocking.client;
 
-import static kr.ac.kunsan.network.chatting.JsonRequestResponseConverter.*;
-
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -14,7 +12,7 @@ import java.util.Set;
 
 import kr.ac.kunsan.network.chatting.ChattingRequest;
 import kr.ac.kunsan.network.chatting.ChattingResponse;
-import kr.ac.kunsan.network.chatting.NetworkUtils;
+import kr.ac.kunsan.network.NetworkUtils;
 import kr.ac.kunsan.network.chatting._3.nio.SocketRequestResponseUtils;
 
 public class ClientHandler extends Thread {

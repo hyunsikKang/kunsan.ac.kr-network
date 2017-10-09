@@ -1,6 +1,5 @@
 package kr.ac.kunsan.network.chatting._3.nio.blocking.client;
 
-import static kr.ac.kunsan.network.chatting.JsonRequestResponseConverter.*;
 import static kr.ac.kunsan.network.chatting._3.nio.SocketRequestResponseUtils.*;
 
 import java.io.BufferedReader;
@@ -11,7 +10,7 @@ import java.nio.channels.SocketChannel;
 
 import kr.ac.kunsan.network.chatting.ChattingRequest;
 import kr.ac.kunsan.network.chatting.ChattingResponse;
-import kr.ac.kunsan.network.chatting.NetworkUtils;
+import kr.ac.kunsan.network.NetworkUtils;
 
 public class ClientHandler extends Thread {
 	ByteBuffer buffer = ByteBuffer.allocate(1024 * 4);

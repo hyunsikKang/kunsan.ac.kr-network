@@ -18,8 +18,7 @@ import java.util.Map;
 
 import kr.ac.kunsan.network.chatting.ChattingRequest;
 import kr.ac.kunsan.network.chatting.ChattingResponse;
-import kr.ac.kunsan.network.chatting.JsonRequestResponseConverter;
-import kr.ac.kunsan.network.chatting.NetworkUtils;
+import kr.ac.kunsan.network.NetworkUtils;
 import kr.ac.kunsan.network.chatting._3.nio.SocketRequestResponseUtils;
 
 public class ChattingServer {

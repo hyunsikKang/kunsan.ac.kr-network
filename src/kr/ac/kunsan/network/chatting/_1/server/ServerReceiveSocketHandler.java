@@ -7,7 +7,7 @@ import java.net.Socket;
 
 import kr.ac.kunsan.network.chatting.ChattingRequest;
 import kr.ac.kunsan.network.chatting.ChattingResponse;
-import kr.ac.kunsan.network.chatting.NetworkUtils;
+import kr.ac.kunsan.network.NetworkUtils;
 
 public class ServerReceiveSocketHandler extends Thread {
 	ChattingServer server;
