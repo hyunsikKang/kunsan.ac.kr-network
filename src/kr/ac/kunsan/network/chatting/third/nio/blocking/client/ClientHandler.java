@@ -32,7 +32,7 @@ public class ClientHandler extends Thread {
 		try {
 			/**
 			 * 모든 Request/Response는 ChattingRequest/ChattingResponse를 전달/회신 받는다
-			 * Object를 Serialization/Deserialization 하기 위해 ObjectInput/OutputStream 을 사용한다.
+			 * Object를 Serialization/Deserialization 하기 위해 String으로 JSON 을 사용하여 serialize/deserialize를 한다.
 			 */
 
 			ChattingResponse response;
