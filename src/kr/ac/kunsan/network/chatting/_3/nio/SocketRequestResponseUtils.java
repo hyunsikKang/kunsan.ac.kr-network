@@ -8,7 +8,7 @@ import java.nio.charset.CharsetDecoder;
 
 import kr.ac.kunsan.network.chatting.ChattingRequest;
 import kr.ac.kunsan.network.chatting.ChattingResponse;
-import kr.ac.kunsan.network.JsonRequestResponseConverter;
+import kr.ac.kunsan.network.chatting.JsonRequestResponseConverter;
 
 public class SocketRequestResponseUtils {
 	public static final Charset DEFAULT_CHARSET = Charset.defaultCharset();

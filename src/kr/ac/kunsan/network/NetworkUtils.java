@@ -20,12 +20,12 @@ public class NetworkUtils {
 		}
 	}
 
-	public static long copyOutputStream(InputStream fileStream, OutputStream outputStream) throws IOException {
+	public static long copyStream(InputStream inputStream, OutputStream outputStream) throws IOException {
 		byte buffer[] = new byte[2048];
 
 		long count = 0;
 		int n;
-		while((n = fileStream.read(buffer)) != -1)  {
+		while((n = inputStream.read(buffer)) != -1 && n > 0)  {
 			count += n;
 			outputStream.write(buffer, 0, n);
 		}

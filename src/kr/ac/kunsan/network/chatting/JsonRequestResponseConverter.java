@@ -1,10 +1,7 @@
-package kr.ac.kunsan.network;
+package kr.ac.kunsan.network.chatting;
 
 import com.eclipsesource.json.Json;
 import com.eclipsesource.json.JsonObject;
-
-import kr.ac.kunsan.network.chatting.ChattingRequest;
-import kr.ac.kunsan.network.chatting.ChattingResponse;
 
 public class JsonRequestResponseConverter {
 	public static String toString(ChattingRequest request) {
