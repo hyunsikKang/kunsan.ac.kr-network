@@ -1,5 +1,6 @@
 package kr.ac.kunsan.network.filetransfer._1.server;
 
+import java.io.File;
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.net.ServerSocket;
@@ -7,7 +8,7 @@ import java.net.Socket;
 
 public class FileTransferServer {
 	private ServerSocket serverSocket;
-	private String baseDirectory = System.getProperty("java.io.tmpdir") + "/";
+	private String baseDirectory = System.getProperty("java.io.tmpdir") + File.separator;
 
 	public FileTransferServer(int port) throws IOException {
 		serverSocket = new ServerSocket(port);
@@ -37,7 +38,7 @@ public class FileTransferServer {
 			int port = acceptSocket.getPort();
 			System.out.println("클라이언트가 접속 하였습니다. IP : " + ip + ", PORT : " + port);
 
-			new ServerReceiveSocketHandler(acceptSocket, server, server.baseDirectory + ip + "/" + port).start();
+			new ServerReceiveSocketHandler(acceptSocket, server, server.baseDirectory + ip + File.separator + port).start();
 		}
 	}
 

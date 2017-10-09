@@ -4,6 +4,9 @@ import java.io.*;
 import java.net.Socket;
 
 import kr.ac.kunsan.network.NetworkUtils;
+import kr.ac.kunsan.network.filetransfer.FileRequest;
+import kr.ac.kunsan.network.filetransfer.FileResponse;
+import kr.ac.kunsan.network.filetransfer.JsonRequestResponseConverter;
 
 public class ClientHandler extends Thread {
 	private InputStream inputStream;
@@ -15,7 +18,7 @@ public class ClientHandler extends Thread {
 		this.socket = socket;
 
 		// 서버에게 response를 받기 위해 InputStream을 소켓으로부터 연다
-		inputStream = socket.getInputStream();		// 서버에게 request를 보내기 위해 InputStream을 소켓으로부터 연다
+		inputStream = socket.getInputStream();        // 서버에게 request를 보내기 위해 InputStream을 소켓으로부터 연다
 		outputStream = socket.getOutputStream();
 	}
 
@@ -24,12 +27,27 @@ public class ClientHandler extends Thread {
 		System.out.print("전송할 파일 경로를 입력하세요: ");
 
 		try {
-			InputStream fileStream = new BufferedInputStream(new FileInputStream(keyboard.readLine()));
-			OutputStream outputStream = this.outputStream;
+			String filePath = keyboard.readLine();
+			try (InputStream fileStream = new BufferedInputStream(new FileInputStream(filePath))) {
+				File file = new File(filePath);
+				FileRequest request = new FileRequest();
+				request.setFileName(file.getName());
+				request.setFileSize(file.length());
 
-			NetworkUtils.copyOutputStream(fileStream, outputStream);
+				OutputStream os = socket.getOutputStream();
+				DataOutputStream dos = new DataOutputStream(socket.getOutputStream());
 
-			System.out.println("파일 전송이 완료 되었습니다.");
+				dos.writeUTF(JsonRequestResponseConverter.toString(request));
+				NetworkUtils.copyStream(fileStream, os);
+				os.flush();
+
+				try (DataInputStream inputStream = new DataInputStream(this.inputStream)) {
+					FileResponse response = JsonRequestResponseConverter.fromResponseString(inputStream.readUTF());
+					if (response.isSuccess()) {
+						System.out.println("파일 전송이 완료 되었습니다. 서버 저장 경로 :" + response.getSavePath());
+					}
+				}
+			}
 		} catch (Exception e) {
 			throw new RuntimeException(e);
 		} finally {

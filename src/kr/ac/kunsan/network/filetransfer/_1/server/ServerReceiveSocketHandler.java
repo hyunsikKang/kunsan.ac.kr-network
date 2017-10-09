@@ -1,18 +1,21 @@
 package kr.ac.kunsan.network.filetransfer._1.server;
 
 import java.io.BufferedOutputStream;
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.Socket;
-import java.util.UUID;
 
 import kr.ac.kunsan.network.NetworkUtils;
+import kr.ac.kunsan.network.filetransfer.FileRequest;
+import kr.ac.kunsan.network.filetransfer.FileResponse;
+import kr.ac.kunsan.network.filetransfer.JsonRequestResponseConverter;
 
 public class ServerReceiveSocketHandler extends Thread {
-	FileTransferServer server;
+	private FileTransferServer server;
 	private Socket socket;
 	private String writePath;
 
@@ -20,19 +23,31 @@ public class ServerReceiveSocketHandler extends Thread {
 		this.socket = socket;
 		this.server = server;
 		new File(writeDirectory).mkdirs();
-		writePath = writeDirectory + "/" + UUID.randomUUID().toString();
+		writePath = writeDirectory;
 	}
 
 	@Override
 	public void run() {
 		try {
-			// 서버에서 클라이언트와 통신할 소켓의 input/output Stream을 열어준다
-			InputStream inputStream = socket.getInputStream();
-			try (OutputStream outputStream = new BufferedOutputStream(new FileOutputStream(writePath))) {
-				NetworkUtils.copyOutputStream(inputStream, outputStream);
-			}
+			// 서버에서 클라이언트와 통신할 소켓의 input Stream을 열어준다
+			DataInputStream inputStream = new DataInputStream(socket.getInputStream());
 
-			System.out.println(writePath + " 경로에 저장 완료 되었습니다.");
+			FileRequest request = JsonRequestResponseConverter.fromRequestString(inputStream.readUTF());
+			// 저장할 파일의 버퍼 스트림을 열어준다
+			String savePath = writePath + File.separator + request.getFileName();
+			try (OutputStream outputStream = new FileOutputStream(savePath)) {
+				NetworkUtils.copyStream(socket.getInputStream(), outputStream, request.getFileSize());
+			}
+			FileResponse response = new FileResponse();
+			response.setSavePath(savePath);
+			response.setSuccess(true);
+
+			BufferedOutputStream bos = new BufferedOutputStream(socket.getOutputStream());
+			DataOutputStream dos = new DataOutputStream(bos);
+
+			dos.writeUTF(JsonRequestResponseConverter.toString(response));
+			dos.flush();
+			System.out.println(savePath + " 경로에 저장 완료 되었습니다.");
 
 		} catch (Exception e) {
 			e.printStackTrace();

@@ -30,7 +30,18 @@ public class NetworkUtils {
 			outputStream.write(buffer, 0, n);
 		}
 
-		outputStream.flush();
+		return count;
+	}
+
+	public static long copyStream(InputStream inputStream, OutputStream outputStream, long size) throws IOException {
+		byte buffer[] = new byte[2048];
+
+		long count = 0;
+		int n = 0;
+		while(count < size && (n = inputStream.read(buffer)) != -1)  {
+			count += n;
+			outputStream.write(buffer, 0, n);
+		}
 
 		return count;
 	}
