@@ -1,19 +1,9 @@
 package kr.ac.kunsan.network.chatting;
 
-import java.io.IOException;
-import java.nio.ByteBuffer;
-import java.nio.channels.SocketChannel;
-import java.nio.charset.Charset;
-import java.nio.charset.CharsetDecoder;
-
 import com.eclipsesource.json.Json;
 import com.eclipsesource.json.JsonObject;
 
 public class JsonRequestResponseConverter {
-
-	public static final Charset DEFAULT_CHARSET = Charset.defaultCharset();
-	public static final CharsetDecoder DECODER = DEFAULT_CHARSET.newDecoder();
-
 	public static String toString(ChattingRequest request) {
 		return Json.object()
 			.add("key", request.getKey())
