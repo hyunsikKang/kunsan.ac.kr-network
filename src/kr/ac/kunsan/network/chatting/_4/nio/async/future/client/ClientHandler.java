@@ -1,13 +1,12 @@
-package kr.ac.kunsan.network.chatting._3.nio.blocking.client;
+package kr.ac.kunsan.network.chatting._4.nio.async.future.client;
 
-import static kr.ac.kunsan.network.chatting.JsonRequestResponseConverter.*;
-import static kr.ac.kunsan.network.chatting._3.nio.SocketRequestResponseUtils.*;
+import static kr.ac.kunsan.network.chatting._4.nio.async.future.FutureAsynchronousSocketRequestResponseUtils.*;
 
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.nio.ByteBuffer;
-import java.nio.channels.SocketChannel;
+import java.nio.channels.AsynchronousSocketChannel;
 
 import kr.ac.kunsan.network.chatting.ChattingRequest;
 import kr.ac.kunsan.network.chatting.ChattingResponse;
@@ -15,7 +14,7 @@ import kr.ac.kunsan.network.chatting.NetworkUtils;
 
 public class ClientHandler extends Thread {
 	ByteBuffer buffer = ByteBuffer.allocate(1024 * 4);
-	private SocketChannel socket;
+	private AsynchronousSocketChannel socket;
 	private BufferedReader keyboard = new BufferedReader(new InputStreamReader(System.in));
 	private String nickName;
 
@@ -27,7 +26,7 @@ public class ClientHandler extends Thread {
 	 * @param socket
 	 * @throws IOException
 	 */
-	public ClientHandler(SocketChannel socket) throws IOException {
+	public ClientHandler(AsynchronousSocketChannel socket) throws IOException {
 		this.socket = socket;
 
 		try {
@@ -85,7 +84,7 @@ public class ClientHandler extends Thread {
 	private void startReadFromServerThread() {
 		new Thread(new Runnable() {
 			@Override public void run() {
-				while (socket.isConnected()) {
+				while (socket.isOpen()) {
 					try {
 						/**
 						 * 서버에게서 응답을 받는다.
@@ -113,7 +112,7 @@ public class ClientHandler extends Thread {
 			@Override public void run() {
 				try {
 					String input;
-					while (socket.isConnected()) {
+					while (socket.isOpen()) {
 						/**
 						 * 키보드 입력을 사용자에게서 !q를 입력하기 전까지 계속 입력 받는다
 						 */
@@ -122,7 +121,7 @@ public class ClientHandler extends Thread {
 							/**
 							 * 소켓이 접속 되어 있다면 퇴장 메시지를 보낸다
 							 */
-							if (socket.isConnected()) {
+							if (socket.isOpen()) {
 								ChattingRequest request = new ChattingRequest();
 								request.setMessageType(ChattingRequest.MessageType.LEAVE);
 								request.setKey(nickName);
@@ -147,7 +146,7 @@ public class ClientHandler extends Thread {
 							break;
 						}
 					}
-				} catch (IOException e) {
+				} catch (Exception e) {
 					e.printStackTrace();
 				} finally {
 					// 예외 발생시 키보드 입력과 열었던 소켓을 닫는다

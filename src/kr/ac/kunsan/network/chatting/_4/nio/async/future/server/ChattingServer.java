@@ -3,37 +3,20 @@ package kr.ac.kunsan.network.chatting._4.nio.async.future.server;
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.net.StandardSocketOptions;
-import java.nio.ByteBuffer;
 import java.nio.channels.AsynchronousServerSocketChannel;
 import java.nio.channels.AsynchronousSocketChannel;
-import java.nio.channels.SelectableChannel;
-import java.nio.channels.SelectionKey;
-import java.nio.channels.Selector;
-import java.nio.channels.ServerSocketChannel;
-import java.nio.channels.SocketChannel;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.List;
-import java.util.ListIterator;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
 
-import kr.ac.kunsan.network.chatting.ChattingRequest;
 import kr.ac.kunsan.network.chatting.ChattingResponse;
-import kr.ac.kunsan.network.chatting.JsonRequestResponseConverter;
 import kr.ac.kunsan.network.chatting.NetworkUtils;
+import kr.ac.kunsan.network.chatting._4.nio.async.future.FutureAsynchronousSocketRequestResponseUtils;
 
 public class ChattingServer {
-	/**
-	 * 클라이언트를 SocketChannel과 nickname을 Key/Value로 가지는 맵을 생성한다. non blocking single thread 모델이므로 ConcurrentHashMap을 사용할 필요가 없다.
-	 */
-	private Map<SocketChannel, String> clientMap = new HashMap<>();
-	private List<ChattingResponse> writeResponseList = new ArrayList<>();
-	private ByteBuffer buffer = ByteBuffer.allocate(1024*4);
+	private Map<AsynchronousSocketChannel, String> clientMap = new ConcurrentHashMap<>();
 
 	public ChattingServer(int port) throws IOException, ClassNotFoundException, ExecutionException, InterruptedException {
 		ExecutorService executorService = Executors.newCachedThreadPool();
@@ -58,58 +41,44 @@ public class ChattingServer {
 
 			while (true) {
 				AsynchronousSocketChannel acceptedSocket = serverSocket.accept().get();
+				InetSocketAddress remoteSocketAddress = (InetSocketAddress)acceptedSocket.getRemoteAddress();
+				System.out.println("클라이언트가 접속 하였습니다. IP : " + remoteSocketAddress.getAddress().getHostAddress() + ", PORT : " + remoteSocketAddress.getPort());
 
-
-				/*try (AsynchronousSocketChannel acceptedSocket = serverSocket.accept().get()) {
-					while(acceptedSocket.read(buffer).get() != -1) {
-
-					}
-				}*/
+				executorService.submit(new ServerReceiveSocketHandler(acceptedSocket, this));
 			}
 		}
 
 	}
 
-	private void writeHandle(SelectionKey key) {
-		ListIterator<ChattingResponse> iterator = writeResponseList.listIterator();
-		while (iterator.hasNext()) {
-			ChattingResponse response = iterator.next();
-			iterator.remove();
-			sendClients(response);
+	public static void main(String[] args) throws Exception {
+		if (args.length != 1) {
+			System.out.println("포트를 전달하지 않았으므로 기본값인 PORT: 8080 으로 서버를 생성합니다.");
+			System.out.println("IP PORT 를 전달하세요, example: java -jar ChattingServer 8080");
+			args = new String[] {"8080"};
 		}
-		// write를 하였으므로 read 동작을 수행할 수 있도록 셀렉터의 관심 오퍼레이션을 리드로 변경한다
-		key.interestOps(SelectionKey.OP_READ);
-	}
 
-
-
-	private void acceptHandle(SelectionKey key, Selector selector) throws IOException, ClassNotFoundException {
-		ServerSocketChannel channel = (ServerSocketChannel)key.channel();
-		SocketChannel acceptedClientSocketChannel = channel.accept();
-		// non blocking 설정을 한다
-		acceptedClientSocketChannel.configureBlocking(false);
-
-		InetSocketAddress remoteSocketAddress = (InetSocketAddress)acceptedClientSocketChannel.getRemoteAddress();
-		System.out.println("클라이언트가 접속 하였습니다. IP : " + remoteSocketAddress.getAddress().getHostAddress() + ", PORT : " + remoteSocketAddress.getPort());
-
-		// 클라이언트 소켓을 셀렉터에 read로 등록한다
-		// 클라이언트로 부터는 리드 동작만 등록한다
-		acceptedClientSocketChannel.register(selector, SelectionKey.OP_READ);
+		/**
+		 * 채팅 서버를 생성한다
+		 */
+		new ChattingServer(Integer.valueOf(args[0]));
 	}
 
 	/**
 	 * 닉네임으로 클라이언트를 등록한다.
-	 * non blocking 이므로 동시성을 생각할 필요 없이 synchronized 키워드 없이 클라이언트를 등록한다
+	 * 동시에 등록되는 것을 방지하기 위해 synchronized 를 사용한다
+	 * clientMap 자체는 ConcurrentHashMap 이지만 containsKey와 put이 하나의 동작이 아니기 때문에 synchronized 를 걸어준다
 	 * @param nickName
-	 * @param socketchannel
+	 * @param socketChannel
 	 * @return
 	 */
-	public boolean registClient(String nickName, SocketChannel socketchannel) {
-		if (clientMap.containsValue(nickName)) {
-			return false;
-		} else {
-			clientMap.put(socketchannel, nickName);
-			return true;
+	public boolean registClient(String nickName, AsynchronousSocketChannel socketChannel) {
+		synchronized (clientMap) {
+			if (clientMap.containsValue(nickName)) {
+				return false;
+			} else {
+				clientMap.put(socketChannel, nickName);
+				return true;
+			}
 		}
 	}
 
@@ -117,12 +86,10 @@ public class ChattingServer {
 	 * 클라이언트를 닉네임으로 제거한다
 	 * @return
 	 */
-	public boolean removeClient(SelectionKey key) {
-		SelectableChannel socketChannel = key.channel();
+	public boolean removeClient(AsynchronousSocketChannel socketChannel) {
 		String nickName = clientMap.remove(socketChannel);
 		if (socketChannel != null && socketChannel.isOpen()) {
 			NetworkUtils.closeQuietly(socketChannel);
-			key.cancel();
 
 			System.out.println(nickName + " 유저가 제거되었습니다.");
 		}
@@ -134,25 +101,12 @@ public class ChattingServer {
 	 * @param response
 	 */
 	public void sendClients(ChattingResponse response) {
-		for (SocketChannel socketChannel: clientMap.keySet()) {
+		for (AsynchronousSocketChannel socketChannel : clientMap.keySet()) {
 			try {
-//				JsonRequestResponseConverter.writeResponse(response, socketChannel);
+				FutureAsynchronousSocketRequestResponseUtils.writeResponse(response, socketChannel);
 			} catch (Exception e) {
 				e.printStackTrace();
 			}
 		}
-	}
-
-	public static void main(String[] args) throws Exception {
-		if (args.length != 1) {
-			System.out.println("포트를 전달하지 않았으므로 기본값인 PORT: 8080 으로 서버를 생성합니다.");
-			System.out.println("IP PORT 를 전달하세요, example: java -jar ChattingServer 8080");
-			args = new String[]{"8080"};
-		}
-
-		/**
-		 * 채팅 서버를 생성한다
-		 */
-		new ChattingServer(Integer.valueOf(args[0]));
 	}
 }
