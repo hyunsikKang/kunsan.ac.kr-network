@@ -15,13 +15,11 @@ import kr.ac.kunsan.network.filetransfer.FileResponse;
 import kr.ac.kunsan.network.filetransfer.JsonRequestResponseConverter;
 
 public class ServerReceiveSocketHandler extends Thread {
-	private FileTransferServer server;
 	private Socket socket;
 	private String writePath;
 
-	ServerReceiveSocketHandler(Socket socket, FileTransferServer server, String writeDirectory) throws IOException {
+	ServerReceiveSocketHandler(Socket socket, String writeDirectory) throws IOException {
 		this.socket = socket;
-		this.server = server;
 		new File(writeDirectory).mkdirs();
 		writePath = writeDirectory;
 	}

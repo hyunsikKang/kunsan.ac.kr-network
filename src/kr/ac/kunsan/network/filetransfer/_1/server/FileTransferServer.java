@@ -38,7 +38,7 @@ public class FileTransferServer {
 			int port = acceptSocket.getPort();
 			System.out.println("클라이언트가 접속 하였습니다. IP : " + ip + ", PORT : " + port);
 
-			new ServerReceiveSocketHandler(acceptSocket, server, server.baseDirectory + ip + File.separator + port).start();
+			new ServerReceiveSocketHandler(acceptSocket, server.baseDirectory + ip + File.separator + port).start();
 		}
 	}
 

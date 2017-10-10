@@ -34,12 +34,11 @@ public class ClientHandler extends Thread {
 				request.setFileName(file.getName());
 				request.setFileSize(file.length());
 
-				OutputStream os = socket.getOutputStream();
-				DataOutputStream dos = new DataOutputStream(socket.getOutputStream());
+				DataOutputStream dos = new DataOutputStream(outputStream);
 
 				dos.writeUTF(JsonRequestResponseConverter.toString(request));
-				NetworkUtils.copyStream(fileStream, os);
-				os.flush();
+				NetworkUtils.copyStream(fileStream, outputStream);
+				outputStream.flush();
 
 				try (DataInputStream inputStream = new DataInputStream(this.inputStream)) {
 					FileResponse response = JsonRequestResponseConverter.fromResponseString(inputStream.readUTF());
