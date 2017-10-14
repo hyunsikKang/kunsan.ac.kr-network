@@ -28,6 +28,8 @@ public class FutureAsynchronousSocketRequestResponseUtils {
 	private static void writeStringRequest(AsynchronousSocketChannel socket, Charset charset, String req) throws Exception {
 		ByteBuffer buffer = ByteBuffer.wrap(req.getBytes(charset));
 		while (buffer.hasRemaining()) {
+			// write시에 get을 하지 않으면 java.nio.channels.WritePendingException 이 발생한다.
+			// 사실상 Async write를 하려면 Write Queue와 같은 별도의 스레드를 만들어 처리하는 것이 더 바람직한 성능을 기대할 수 있다.
 			socket.write(buffer).get();
 		}
 	}
@@ -43,6 +45,8 @@ public class FutureAsynchronousSocketRequestResponseUtils {
 	public static String readStringFromAsynchronousSocketChannel(AsynchronousSocketChannel socket, ByteBuffer buffer) throws Exception {
 		StringBuilder resp = new StringBuilder();
 		int count;
+		// read 부분도 사실상 read를 하고 결과가 올때까지 블로킹 하는 작업을 수행한다.
+		// 소켓의 데이터를 결국 순차적으로 읽어와야 하기 때문에 완료 될때까지 기다리는 수밖에 없다.
 		while ((count = socket.read(buffer).get()) != -1) {
 
 			// 읽어들인 버퍼를 초기화 하여 문자열로 변환할 준비를 한다
